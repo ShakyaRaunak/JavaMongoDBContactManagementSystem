@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.rkshakyaprojects.javamongodbapp;
+package com.javamongodb.application;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -14,10 +14,8 @@ import com.mongodb.MongoClient;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BoxLayout;
@@ -37,18 +35,18 @@ import javax.swing.table.DefaultTableModel;
  *
  * @author Raunak Shakya
  */
-public class ContactRecordsView extends JFrame implements ActionListener, TableModelListener {
+public class ShowAllRecords extends JFrame implements ActionListener, TableModelListener {
 
-    private JScrollPane pane;
-    private Container cnt;
-    private MyTableModel model;
-    private JTable jtable;
-    private JButton editBtn, deleteBtn;
-    private JPanel btnPanel, tablePanel;
-    private static int onoffedit = 0;
-    private static boolean editable;
+    public JScrollPane pane;
+    public Container cnt;
+    MyTableModel model;
+    JTable jtable;
+    JButton editBtn, deleteBtn;
+    JPanel btnPanel, tablePanel;
+    static int onoffedit = 0;
+    static boolean editable;
 
-    public ContactRecordsView() {
+    public ShowAllRecords() {
         super("All the Contact Informations");
 
         cnt = getContentPane();
@@ -102,7 +100,11 @@ public class ContactRecordsView extends JFrame implements ActionListener, TableM
         jtable.setAutoCreateRowSorter(true);
 
         try {
-            DB db = MongoDBConnectionUtils.connectToDatabase();
+            // To connect to mongodb server
+            MongoClient mongoClient = new MongoClient("localhost", 27017);
+
+            // Now connect to your databases
+            DB db = mongoClient.getDB("ContactManagementSystemDB");
 
             DBCollection coll = db.createCollection("memberInformationColl", null);
             coll = db.getCollection("memberInformationColl");
@@ -143,7 +145,7 @@ public class ContactRecordsView extends JFrame implements ActionListener, TableM
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
             Logger.getLogger(JAVAMongoDBApplication.class.getName()).log(Level.SEVERE, null, ex);
         }
-        new ContactRecordsView();
+        new ShowAllRecords();
     }
 
     @Override
@@ -164,7 +166,11 @@ public class ContactRecordsView extends JFrame implements ActionListener, TableM
                 if (i == JOptionPane.YES_OPTION) {
                     int j[] = jtable.getSelectedRows();
                     try {
-                        DB db = MongoDBConnectionUtils.connectToDatabase();
+                        // To connect to mongodb server
+                        MongoClient mongoClient = new MongoClient("localhost", 27017);
+
+                        // Now connect to your databases
+                        DB db = mongoClient.getDB("ContactManagementSystemDB");
 
                         DBCollection coll = db.getCollection("memberInformationColl");
                         for (int count = 0; count < j.length; count++) {
@@ -177,7 +183,7 @@ public class ContactRecordsView extends JFrame implements ActionListener, TableM
                         removeSelectedRows(jtable);
 
                     } catch (Exception e) {
-                        System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                        //System.err.println(e.getClass().getName() + ": " + e.getMessage());
                     }
                 }
             } else {
@@ -187,10 +193,10 @@ public class ContactRecordsView extends JFrame implements ActionListener, TableM
     }
 
     public void removeSelectedRows(JTable table) {
-        DefaultTableModel myModel = (DefaultTableModel) this.jtable.getModel();
+        DefaultTableModel model = (DefaultTableModel) this.jtable.getModel();
         int[] rows = table.getSelectedRows();
         for (int i = 0; i < rows.length; i++) {
-            myModel.removeRow(rows[i] - i);
+            model.removeRow(rows[i] - i);
         }
     }
 
@@ -241,7 +247,11 @@ public class ContactRecordsView extends JFrame implements ActionListener, TableM
         Object mobileno = model.getValueAt(row, 9);
 
         try {
-            DB db = MongoDBConnectionUtils.connectToDatabase();
+            // To connect to mongodb server
+            MongoClient mongoClient = new MongoClient("localhost", 27017);
+
+            // Now connect to your databases
+            DB db = mongoClient.getDB("ContactManagementSystemDB");
             DBCollection coll = db.getCollection("memberInformationColl");
 
             BasicDBObject query = new BasicDBObject("MobileNumber", new BasicDBObject("$regex", mobileno.toString()));
@@ -263,7 +273,7 @@ public class ContactRecordsView extends JFrame implements ActionListener, TableM
                     JOptionPane.showMessageDialog(null, "Database has been modified... ", "Update Success", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
-        } catch (UnknownHostException | HeadlessException e) {
+        } catch (Exception e) {
 
         }
     }
