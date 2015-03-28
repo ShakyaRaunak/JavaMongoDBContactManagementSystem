@@ -7,12 +7,14 @@ package com.javamongodb.application;
 
 import com.javamongodb.utils.DatabaseUtils;
 import com.javamongodb.utils.LayoutUtils;
+import com.javamongodb.utils.MessageUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+import com.sun.org.apache.xml.internal.serializer.utils.Utils;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -20,6 +22,7 @@ import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.UnknownHostException;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BoxLayout;
@@ -40,6 +43,8 @@ import javax.swing.table.DefaultTableModel;
  * @author Raunak Shakya
  */
 public class ShowAllRecords extends JFrame implements ActionListener, TableModelListener {
+
+    public final ResourceBundle messages = MessageUtils.MESSAGES;
 
     public JScrollPane pane;
     public Container cnt;
@@ -104,17 +109,8 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
         jtable.setAutoCreateRowSorter(true);
 
         try {
-            // To connect to mongodb server
-            MongoClient mongoClient = new MongoClient(DatabaseUtils.HOST_NAME, DatabaseUtils.PORT_NUMBER);
-
-            // Now connect to your databases
-            DB db = mongoClient.getDB(DatabaseUtils.DATABASE_NAME);
-
-            DBCollection coll = db.createCollection(DatabaseUtils.COLLECTION_NAME, null);
-            coll = db.getCollection(DatabaseUtils.COLLECTION_NAME);
-
-            DBCursor cursor = coll.find();
-
+            DBCollection collection = DatabaseUtils.openDBConnection();
+            DBCursor cursor = collection.find();
             while (cursor.hasNext()) {
                 DBObject doc = cursor.next();
                 Object[] data = new Object[]{doc.get("FirstName"), doc.get("MiddleName"), doc.get("LastName"),
@@ -122,6 +118,7 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
                     doc.get("EmailAddress"), doc.get("MobileNumber"), doc.get("HomeContact")};
                 model.addRow(data);
             }
+            DatabaseUtils.closeDBConnection();
 
             jtable.getModel().addTableModelListener(this);
             pane = new JScrollPane(jtable);
@@ -149,7 +146,7 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
             Logger.getLogger(JAVAMongoDBApplication.class.getName()).log(Level.SEVERE, null, ex);
         }
-        new ShowAllRecords();
+        ShowAllRecords showAllRecords = new ShowAllRecords();
     }
 
     @Override
@@ -170,22 +167,12 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
                 if (i == JOptionPane.YES_OPTION) {
                     int j[] = jtable.getSelectedRows();
                     try {
-                        // To connect to mongodb server
-                        MongoClient mongoClient = new MongoClient(DatabaseUtils.HOST_NAME, DatabaseUtils.PORT_NUMBER);
-
-                        // Now connect to your databases
-                        DB db = mongoClient.getDB(DatabaseUtils.DATABASE_NAME);
-
-                        DBCollection coll = db.getCollection(DatabaseUtils.COLLECTION_NAME);
+                        DBCollection collection = DatabaseUtils.openDBConnection();
                         for (int count = 0; count < j.length; count++) {
                             String mobileno = (String) jtable.getValueAt(j[count], 9);
-
-                            //Remove the document...
-                            coll.remove(new BasicDBObject().append("MobileNumber", mobileno));
-
+                            collection.remove(new BasicDBObject().append("MobileNumber", mobileno)); //remove the document
                         }
                         removeSelectedRows(jtable);
-
                     } catch (Exception e) {
                         //System.err.println(e.getClass().getName() + ": " + e.getMessage());
                     }
@@ -197,10 +184,10 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
     }
 
     public void removeSelectedRows(JTable table) {
-        DefaultTableModel model = (DefaultTableModel) this.jtable.getModel();
+        DefaultTableModel defaultTableModel = (DefaultTableModel) this.jtable.getModel();
         int[] rows = table.getSelectedRows();
         for (int i = 0; i < rows.length; i++) {
-            model.removeRow(rows[i] - i);
+            defaultTableModel.removeRow(rows[i] - i);
         }
     }
 
@@ -251,33 +238,28 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
         Object mobileno = model.getValueAt(row, 9);
 
         try {
-            // To connect to mongodb server
-            MongoClient mongoClient = new MongoClient(DatabaseUtils.HOST_NAME, DatabaseUtils.PORT_NUMBER);
-
-            // Now connect to your databases
-            DB db = mongoClient.getDB(DatabaseUtils.DATABASE_NAME);
-            DBCollection coll = db.getCollection(DatabaseUtils.COLLECTION_NAME);
-
+            DBCollection collection = DatabaseUtils.openDBConnection();
             BasicDBObject query = new BasicDBObject("MobileNumber", new BasicDBObject("$regex", mobileno.toString()));
-            DBCursor cursor = coll.find(query);
+            DBCursor cursor = collection.find(query);
             DBObject doc = cursor.next();
             Object id = doc.get("_id");
             Object prevData = doc.get(changedColName);
             //System.out.println(prevData.toString());
-            
+
             if (!(newData.toString().equals(prevData.toString()))) {
                 BasicDBObject updateDocument = new BasicDBObject();
                 updateDocument.append("$set", new BasicDBObject().append(changedColName, newData.toString()));
                 BasicDBObject searchQuery = new BasicDBObject().append("_id", id);
 
-                int i = JOptionPane.showConfirmDialog(null, "Are you sure to save?", "Save Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                int i = JOptionPane.showConfirmDialog(null, messages.getString("question.to.save"), messages.getString("title.save.confirm"), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if (i == JOptionPane.YES_OPTION) {
                     //Update the document...
-                    coll.update(searchQuery, updateDocument);
-                    JOptionPane.showMessageDialog(null, "Database has been modified... ", "Update Success", JOptionPane.INFORMATION_MESSAGE);
+                    collection.update(searchQuery, updateDocument);
+                    JOptionPane.showMessageDialog(null, messages.getString("notification.database.updated"), messages.getString("title.update.confirm"), JOptionPane.INFORMATION_MESSAGE);
                 }
             }
-        } catch (UnknownHostException | HeadlessException e) {
+            DatabaseUtils.closeDBConnection();
+        } catch (HeadlessException e) {
 
         }
     }

@@ -9,14 +9,10 @@ import com.javamongodb.utils.DatabaseUtils;
 import com.javamongodb.utils.LayoutUtils;
 import com.javamongodb.utils.MessageUtils;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
 import com.mongodb.DBCollection;
-import com.mongodb.MongoClient;
 import java.awt.Font;
-import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.UnknownHostException;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,8 +35,8 @@ import net.miginfocom.swing.MigLayout;
  * @author Raunak Shakya
  */
 public class JAVAMongoDBApplication {
-    
-    public static final ResourceBundle messages = MessageUtils.MESSAGES;
+
+    public final ResourceBundle messages = MessageUtils.MESSAGES;
 
     JFrame frame = new JFrame("JAVA with MongoDB Project");
     JPanel panel = new JPanel();
@@ -146,19 +142,11 @@ public class JAVAMongoDBApplication {
         showButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
-
                 final JPanel pn = new JPanel();
                 pn.setLayout(new MigLayout());
-                JLabel label = new JLabel("Enter Master Password to see all the records: ");
+                JLabel label = new JLabel(messages.getString("enter.master.password"));
                 JPasswordField pf = new JPasswordField(24);
                 pf.addAncestorListener(new RequestFocusListener());
-//                {
-//                    @Override
-//                    public void addNotify(){
-//                        pn.addNotify();
-//                        requestFocus();
-//                    }
-//                };
                 pn.add(label, "wrap");
                 pn.add(pf);
                 int flag = 0;
@@ -167,9 +155,8 @@ public class JAVAMongoDBApplication {
                     if (okCxl == JOptionPane.OK_OPTION) {
                         String password = new String(pf.getPassword());
                         if (password.equals("rs")) {
-                            //JOptionPane.showMessageDialog(new JFrame(), "Correct password", "Conformation", JOptionPane.INFORMATION_MESSAGE);
                             flag = 1;
-                            new ShowAllRecords();
+                            ShowAllRecords showAllRecords = new ShowAllRecords();
                         } else {
                             JOptionPane.showMessageDialog(new JFrame(), "Incorrect password", "Conformation", JOptionPane.OK_OPTION);
                         }
@@ -195,37 +182,23 @@ public class JAVAMongoDBApplication {
                 valueMobileNumber = txtMobileNumber.getText().trim();
                 valueHomeContact = txtHomeContact.getText().trim();
                 if (valueFirstName.isEmpty() || valueMobileNumber.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "Enter at least First Name, Email & Mobile No.","Input Fields Empty",JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, messages.getString("enter.minimum.field.values"), "Input Fields Empty", JOptionPane.WARNING_MESSAGE);
                 } else {
-                    try {
-                        // To connect to mongodb server
-                        MongoClient mongoClient = new MongoClient(DatabaseUtils.HOST_NAME, DatabaseUtils.PORT_NUMBER);
-
-                        // Now connect to your databases
-                        DB db = mongoClient.getDB(DatabaseUtils.DATABASE_NAME);
-
-                        //boolean auth = db.authenticate(myUserName, myPassword);
-                        //System.out.println("Authentication: "+auth);
-                        DBCollection coll = db.createCollection(DatabaseUtils.COLLECTION_NAME, null);
-                        coll = db.getCollection(DatabaseUtils.COLLECTION_NAME);
-
-                        BasicDBObject doc = new BasicDBObject("FirstName", valueFirstName).
-                                append("MiddleName", valueMiddleName).
-                                append("LastName", valueLastName).
-                                append("Gender", valueGender).
-                                append("City", valueCity).
-                                append("Street", valueStreet).
-                                append("BlockNumber", valueBlockNumber).
-                                append("Country", valueCountry).
-                                append("EmailAddress", valueEmailAddress).
-                                append("MobileNumber", valueMobileNumber).
-                                append("HomeContact", valueHomeContact);
-                        coll.insert(doc);
-                        JOptionPane.showMessageDialog(new JFrame(), "Data has been saved!", "Success Message", JOptionPane.INFORMATION_MESSAGE);
-
-                    } catch (UnknownHostException | HeadlessException e) {
-                        JOptionPane.showMessageDialog(new JFrame(), "Error occurred while saving data!", "Error Message", JOptionPane.ERROR_MESSAGE);
-                    }
+                    DBCollection collection = DatabaseUtils.openDBConnection();
+                    BasicDBObject doc = new BasicDBObject("FirstName", valueFirstName).
+                            append("MiddleName", valueMiddleName).
+                            append("LastName", valueLastName).
+                            append("Gender", valueGender).
+                            append("City", valueCity).
+                            append("Street", valueStreet).
+                            append("BlockNumber", valueBlockNumber).
+                            append("Country", valueCountry).
+                            append("EmailAddress", valueEmailAddress).
+                            append("MobileNumber", valueMobileNumber).
+                            append("HomeContact", valueHomeContact);
+                    collection.insert(doc);
+                    DatabaseUtils.closeDBConnection();
+                    JOptionPane.showMessageDialog(new JFrame(), "Data has been saved!", "Success Message", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
         });
@@ -262,7 +235,6 @@ public class JAVAMongoDBApplication {
      */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
-
             @Override
             public void run() {
                 try {
