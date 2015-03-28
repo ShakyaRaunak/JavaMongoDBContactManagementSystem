@@ -92,10 +92,10 @@ public class JAVAMongoDBApplication {
         panel.add(lblTitle, "gapleft 4, wrap 25");
 
         panel.add(lblFirstName, "gapleft 5, wrap");
-        panel.add(txtFirstName, "gapleft 15, wrap");    //, pushx, growx");
+        panel.add(txtFirstName, "gapleft 15, wrap"); //, pushx, growx");
 
         panel.add(lblMiddleName, "gapleft 5, wrap");
-        panel.add(txtMiddleName, "gapleft 15, wrap");   //, pushx, growx");
+        panel.add(txtMiddleName, "gapleft 15, wrap"); //, pushx, growx");
 
         panel.add(lblLastName, "gapleft 5, wrap");
         panel.add(txtLastName, "gapleft 15, wrap");
@@ -223,7 +223,7 @@ public class JAVAMongoDBApplication {
         panel.add(clearButton);
 
         frame.add(panel);
-        frame.setSize(340, 640);
+        frame.setSize(LayoutUtils.FORM_WINDOW_WIDTH, LayoutUtils.FORM_WINDOW_HEIGHT);
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

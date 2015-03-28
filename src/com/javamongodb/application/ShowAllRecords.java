@@ -46,51 +46,93 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
 
     public final ResourceBundle messages = MessageUtils.MESSAGES;
 
-    public JScrollPane pane;
-    public Container cnt;
-    MyTableModel model;
-    JTable jtable;
-    JButton editBtn, deleteBtn;
-    JPanel btnPanel, tablePanel;
-    static int onoffedit = 0;
-    static boolean editable;
+    private JScrollPane jScrollPane;
+    private Container container;
+    private MyTableModel myTableModel;
+    private final JTable jtable;
+    private JButton editButton, deleteButton;
+    private JPanel buttonsPanel, tablePanel;
+    private static int editToggle = 0;
+    private static boolean isEditable;
 
     public ShowAllRecords() {
         super("All the Contact Informations");
 
-        cnt = getContentPane();
-        btnPanel = new JPanel();
-        btnPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        container = getContentPane();
+        buttonsPanel = new JPanel();
+        buttonsPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-        editBtn = new JButton("   Enable Edit Records  ");
-        deleteBtn = new JButton("  Delete Records  ");
-        editBtn.addActionListener(this);
-        deleteBtn.addActionListener(this);
-        btnPanel.add(deleteBtn);
-        btnPanel.add(editBtn);
+        editButton = new JButton("   " + messages.getString("enable.edit.records") + "  ");
+        deleteButton = new JButton("  " + messages.getString("delete.records") + "  ");
+        editButton.addActionListener(this);
+        deleteButton.addActionListener(this);
+        buttonsPanel.add(deleteButton);
+        buttonsPanel.add(editButton);
 
         tablePanel = new JPanel();
         tablePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-
-        model = new MyTableModel() {
+        myTableModel = new MyTableModel() {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return editable;
+                return isEditable;
             }
         };
-        model.addColumn("First Name");
-        model.addColumn("Middle Name");
-        model.addColumn("Last Name");
-        model.addColumn("Gender");
-        model.addColumn("City");
-        model.addColumn("Street");
-        model.addColumn("BlockNo.");
-        model.addColumn("Country");
-        model.addColumn("Email");
-        model.addColumn("MobileNo.");
-        model.addColumn("TelNo.");
+        addColumnsToTable(myTableModel);
+        jtable = new JTable(myTableModel);
+        setColumnWidths(jtable);
+        jtable.setPreferredScrollableViewportSize(new Dimension(980, 500));
+        jtable.setFillsViewportHeight(true);
+        jtable.getTableHeader().setReorderingAllowed(false);
+        jtable.setAutoCreateRowSorter(true);
+        getRecordsOnTable();
+        tablePanel.add(jScrollPane);
 
-        jtable = new JTable(model);
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.add(buttonsPanel);
+        container.add(tablePanel);
+
+        setSize(LayoutUtils.WINDOW_WIDTH, LayoutUtils.WINDOW_HEIGHT);
+        setResizable(false);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setVisible(true);
+    }
+
+    private void getRecordsOnTable() {
+        try {
+            DBCollection collection = DatabaseUtils.openDBConnection();
+            DBCursor cursor = collection.find();
+            while (cursor.hasNext()) {
+                DBObject doc = cursor.next();
+                Object[] data = new Object[]{doc.get("FirstName"), doc.get("MiddleName"), 
+                    doc.get("LastName"), doc.get("Gender"), doc.get("City"), doc.get("Street"), 
+                    doc.get("BlockNumber"), doc.get("Country"), doc.get("EmailAddress"), 
+                    doc.get("MobileNumber"), doc.get("HomeContact")};
+                myTableModel.addRow(data);
+            }
+            DatabaseUtils.closeDBConnection();
+            jtable.getModel().addTableModelListener(this);
+            jScrollPane = new JScrollPane(jtable);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Database Error!");
+        }
+    }
+
+    private void addColumnsToTable(MyTableModel myTableModel) {
+        myTableModel.addColumn("First Name");
+        myTableModel.addColumn("Middle Name");
+        myTableModel.addColumn("Last Name");
+        myTableModel.addColumn("Gender");
+        myTableModel.addColumn("City");
+        myTableModel.addColumn("Street");
+        myTableModel.addColumn("BlockNo.");
+        myTableModel.addColumn("Country");
+        myTableModel.addColumn("Email");
+        myTableModel.addColumn("MobileNo.");
+        myTableModel.addColumn("TelNo.");
+    }
+
+    private void setColumnWidths(JTable jtable) {
         jtable.getColumnModel().getColumn(0).setPreferredWidth(90);
         jtable.getColumnModel().getColumn(1).setPreferredWidth(100);
         jtable.getColumnModel().getColumn(2).setPreferredWidth(90);
@@ -102,42 +144,47 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
         jtable.getColumnModel().getColumn(8).setPreferredWidth(150);
         jtable.getColumnModel().getColumn(9).setPreferredWidth(90);
         jtable.getColumnModel().getColumn(10).setPreferredWidth(80);
+    }
 
-        jtable.setPreferredScrollableViewportSize(new Dimension(980, 500));
-        jtable.setFillsViewportHeight(true);
-        jtable.getTableHeader().setReorderingAllowed(false);
-        jtable.setAutoCreateRowSorter(true);
+    public void removeSelectedRows(JTable table) {
+        DefaultTableModel defaultTableModel = (DefaultTableModel) this.jtable.getModel();
+        int[] rows = table.getSelectedRows();
+        for (int i = 0; i < rows.length; i++) {
+            defaultTableModel.removeRow(rows[i] - i);
+        }
+    }
 
+    private void update(String columnName, String newValue, String mobileNumber) {
         try {
             DBCollection collection = DatabaseUtils.openDBConnection();
-            DBCursor cursor = collection.find();
-            while (cursor.hasNext()) {
-                DBObject doc = cursor.next();
-                Object[] data = new Object[]{doc.get("FirstName"), doc.get("MiddleName"), doc.get("LastName"),
-                    doc.get("Gender"), doc.get("City"), doc.get("Street"), doc.get("BlockNumber"), doc.get("Country"),
-                    doc.get("EmailAddress"), doc.get("MobileNumber"), doc.get("HomeContact")};
-                model.addRow(data);
+            BasicDBObject query = new BasicDBObject("MobileNumber", new BasicDBObject("$regex", mobileNumber));
+            DBCursor cursor = collection.find(query);
+            DBObject doc = cursor.next();
+            Object id = doc.get("_id");
+            Object prevData = doc.get(columnName);
+            if (!(newValue.equals(prevData.toString()))) {
+                BasicDBObject updateDocument = new BasicDBObject();
+                updateDocument.append("$set", new BasicDBObject().append(columnName, newValue));
+                BasicDBObject searchQuery = new BasicDBObject().append("_id", id);
+                int i = JOptionPane.showConfirmDialog(
+                        null,
+                        messages.getString("question.to.save"),
+                        messages.getString("title.save.confirm"),
+                        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE
+                );
+                if (i == JOptionPane.YES_OPTION) {
+                    collection.update(searchQuery, updateDocument); //update the document
+                    JOptionPane.showMessageDialog(
+                            null,
+                            messages.getString("notification.database.updated"),
+                            messages.getString("title.update.confirm"),
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
+                }
             }
             DatabaseUtils.closeDBConnection();
-
-            jtable.getModel().addTableModelListener(this);
-            pane = new JScrollPane(jtable);
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Database Error!");
+        } catch (Exception exception) {
         }
-
-        tablePanel.add(pane);
-
-        cnt.setLayout(new BoxLayout(cnt, BoxLayout.Y_AXIS));
-        cnt.add(btnPanel);
-        cnt.add(tablePanel);
-
-        setSize(1000, 400);
-        setResizable(false);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setVisible(true);
     }
 
     public static void main(String args[]) {
@@ -151,19 +198,24 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
 
     @Override
     public void actionPerformed(ActionEvent ae) {
-        if (ae.getSource() == editBtn) {
-            if (onoffedit == 0) {
-                editBtn.setText("   Disable Edit Records  ");
-                editable = true;
-                onoffedit = 1;
-            } else if (onoffedit == 1) {
-                editBtn.setText("   Enable Edit Records   ");
-                editable = false;
-                onoffedit = 0;
+        if (ae.getSource() == editButton) {
+            if (editToggle == 0) {
+                editButton.setText("   " + messages.getString("disable.edit.records") + "  ");
+                isEditable = true;
+                editToggle = 1;
+            } else if (editToggle == 1) {
+                editButton.setText("   " + messages.getString("enable.edit.records") + "   ");
+                isEditable = false;
+                editToggle = 0;
             }
-        } else if (ae.getSource() == deleteBtn) {
+        } else if (ae.getSource() == deleteButton) {
             if (jtable.getSelectedRows().length > 0) {
-                int i = JOptionPane.showConfirmDialog(null, "Are you sure to delete?", "Delete Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                int i = JOptionPane.showConfirmDialog(
+                        null,
+                        messages.getString("question.to.delete"),
+                        messages.getString("title.delete.confirm"),
+                        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE
+                );
                 if (i == JOptionPane.YES_OPTION) {
                     int j[] = jtable.getSelectedRows();
                     try {
@@ -182,21 +234,13 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
             }
         }
     }
-
-    public void removeSelectedRows(JTable table) {
-        DefaultTableModel defaultTableModel = (DefaultTableModel) this.jtable.getModel();
-        int[] rows = table.getSelectedRows();
-        for (int i = 0; i < rows.length; i++) {
-            defaultTableModel.removeRow(rows[i] - i);
-        }
-    }
-
+    
     @Override
     public void tableChanged(TableModelEvent tme) {
         int row = tme.getFirstRow();
-        int col = tme.getColumn();
+        int column = tme.getColumn();
         String changedColName = null;
-        switch (col) {
+        switch (column) {
             case 0:
                 changedColName = "FirstName";
                 break;
@@ -230,38 +274,15 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
             case 10:
                 changedColName = "HomeContact";
                 break;
+            default:
+                throw new RuntimeException("Column could not be updated.");
         }
 
-        model = (MyTableModel) tme.getSource();
-//      String changedColName = model.getColumnName(col);
-        Object newData = model.getValueAt(row, col);
-        Object mobileno = model.getValueAt(row, 9);
-
-        try {
-            DBCollection collection = DatabaseUtils.openDBConnection();
-            BasicDBObject query = new BasicDBObject("MobileNumber", new BasicDBObject("$regex", mobileno.toString()));
-            DBCursor cursor = collection.find(query);
-            DBObject doc = cursor.next();
-            Object id = doc.get("_id");
-            Object prevData = doc.get(changedColName);
-            //System.out.println(prevData.toString());
-
-            if (!(newData.toString().equals(prevData.toString()))) {
-                BasicDBObject updateDocument = new BasicDBObject();
-                updateDocument.append("$set", new BasicDBObject().append(changedColName, newData.toString()));
-                BasicDBObject searchQuery = new BasicDBObject().append("_id", id);
-
-                int i = JOptionPane.showConfirmDialog(null, messages.getString("question.to.save"), messages.getString("title.save.confirm"), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-                if (i == JOptionPane.YES_OPTION) {
-                    //Update the document...
-                    collection.update(searchQuery, updateDocument);
-                    JOptionPane.showMessageDialog(null, messages.getString("notification.database.updated"), messages.getString("title.update.confirm"), JOptionPane.INFORMATION_MESSAGE);
-                }
-            }
-            DatabaseUtils.closeDBConnection();
-        } catch (HeadlessException e) {
-
-        }
+        myTableModel = (MyTableModel) tme.getSource();
+        //String changedColName = myTableModel.getColumnName(col);
+        String newValue = myTableModel.getValueAt(row, column).toString();
+        String mobileNumber = myTableModel.getValueAt(row, 9).toString();
+        update(changedColName, newValue, mobileNumber);
     }
 
 }

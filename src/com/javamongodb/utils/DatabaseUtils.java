@@ -20,7 +20,7 @@ import javax.swing.JOptionPane;
 public class DatabaseUtils {
 
     public static final String HOST_NAME = "localhost";
-    public static final int PORT_NUMBER = 27017;
+    public static final Integer PORT_NUMBER = 27017;
     public static final String DATABASE_NAME = "ContactManagementSystem";
     public static final String COLLECTION_NAME = "Members";
 
