@@ -11,4 +11,9 @@ package com.javamongodb.utils;
  */
 public class DatabaseUtils {
     
+    public static final String HOST_NAME = "localhost";
+    public static final int PORT_NUMBER = 27017;
+    public static final String DATABASE_NAME = "ContactManagementSystemDB";
+    public static final String COLLECTION_NAME = "memberInformationColl";
+    
 }

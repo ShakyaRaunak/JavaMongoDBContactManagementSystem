@@ -5,13 +5,19 @@
  */
 package com.javamongodb.application;
 
+import com.javamongodb.utils.DatabaseUtils;
+import com.javamongodb.utils.LayoutUtils;
+import com.javamongodb.utils.MessageUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
 import java.awt.Font;
+import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.UnknownHostException;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ButtonGroup;
@@ -33,6 +39,8 @@ import net.miginfocom.swing.MigLayout;
  * @author Raunak Shakya
  */
 public class JAVAMongoDBApplication {
+    
+    public static final ResourceBundle messages = MessageUtils.MESSAGES;
 
     JFrame frame = new JFrame("JAVA with MongoDB Project");
     JPanel panel = new JPanel();
@@ -40,44 +48,44 @@ public class JAVAMongoDBApplication {
     Font font = new Font("Comic Sans MS", Font.BOLD, 18);
     JLabel lblTitle = new JLabel("Contact Management System");
 
-    JLabel lblFirstName = new JLabel("First Name:");
+    JLabel lblFirstName = new JLabel(messages.getString("label.first.name"));
     JTextField txtFirstName = new JTextField(21);
 
-    JLabel lblMiddleName = new JLabel("Middle Name:");
+    JLabel lblMiddleName = new JLabel(messages.getString("label.middle.name"));
     JTextField txtMiddleName = new JTextField(21);
 
-    JLabel lblLastName = new JLabel("Last Name:");
+    JLabel lblLastName = new JLabel(messages.getString("label.last.name"));
     JTextField txtLastName = new JTextField(21);
 
-    JLabel lblGender = new JLabel("Gender:");
-    JRadioButton maleRadioButton = new JRadioButton("Male");
-    JRadioButton femaleRadioButton = new JRadioButton("Female");
+    JLabel lblGender = new JLabel(messages.getString("label.gender"));
+    JRadioButton maleRadioButton = new JRadioButton(messages.getString("label.male"));
+    JRadioButton femaleRadioButton = new JRadioButton(messages.getString("label.female"));
     ButtonGroup bg = new ButtonGroup();
 
-    JLabel lblCity = new JLabel("City:");
+    JLabel lblCity = new JLabel(messages.getString("label.city"));
     JTextField txtCity = new JTextField(21);
 
-    JLabel lblStreet = new JLabel("Street:");
+    JLabel lblStreet = new JLabel(messages.getString("label.street"));
     JTextField txtStreet = new JTextField(21);
 
-    JLabel lblBlockNumber = new JLabel("Block No.:");
+    JLabel lblBlockNumber = new JLabel(messages.getString("label.block.number"));
     JTextField txtBlockNumber = new JTextField(21);
 
-    JLabel lblCountry = new JLabel("Country");
+    JLabel lblCountry = new JLabel(messages.getString("label.country"));
     JTextField txtCountry = new JTextField(21);
 
-    JLabel lblEmailAddress = new JLabel("Email Address:");
+    JLabel lblEmailAddress = new JLabel(messages.getString("label.email.address"));
     JTextField txtEmailAddress = new JTextField(21);
 
-    JLabel lblMobileNumber = new JLabel("Mobile Number:");
+    JLabel lblMobileNumber = new JLabel(messages.getString("label.mobile.number"));
     JTextField txtMobileNumber = new JTextField(21);
 
-    JLabel lblHomeContact = new JLabel("Home Contact:");
+    JLabel lblHomeContact = new JLabel(messages.getString("label.home.contact"));
     JTextField txtHomeContact = new JTextField(21);
 
-    JButton showButton = new JButton("      Show      ");
-    JButton saveButton = new JButton("      Save      ");
-    JButton clearButton = new JButton("      Clear      ");
+    JButton showButton = new JButton("     " + messages.getString("common.show") + "     ");
+    JButton saveButton = new JButton("     " + messages.getString("common.save") + "     ");
+    JButton clearButton = new JButton("    " + messages.getString("common.clear") + "    ");
 
     String valueFirstName, valueMiddleName, valueLastName, valueGender, valueCity,
             valueStreet, valueBlockNumber, valueCountry, valueEmailAddress, valueMobileNumber, valueHomeContact;
@@ -191,15 +199,15 @@ public class JAVAMongoDBApplication {
                 } else {
                     try {
                         // To connect to mongodb server
-                        MongoClient mongoClient = new MongoClient("localhost", 27017);
+                        MongoClient mongoClient = new MongoClient(DatabaseUtils.HOST_NAME, DatabaseUtils.PORT_NUMBER);
 
                         // Now connect to your databases
-                        DB db = mongoClient.getDB("ContactManagementSystemDB");
+                        DB db = mongoClient.getDB(DatabaseUtils.DATABASE_NAME);
 
                         //boolean auth = db.authenticate(myUserName, myPassword);
                         //System.out.println("Authentication: "+auth);
-                        DBCollection coll = db.createCollection("memberInformationColl", null);
-                        coll = db.getCollection("memberInformationColl");
+                        DBCollection coll = db.createCollection(DatabaseUtils.COLLECTION_NAME, null);
+                        coll = db.getCollection(DatabaseUtils.COLLECTION_NAME);
 
                         BasicDBObject doc = new BasicDBObject("FirstName", valueFirstName).
                                 append("MiddleName", valueMiddleName).
@@ -215,7 +223,7 @@ public class JAVAMongoDBApplication {
                         coll.insert(doc);
                         JOptionPane.showMessageDialog(new JFrame(), "Data has been saved!", "Success Message", JOptionPane.INFORMATION_MESSAGE);
 
-                    } catch (Exception e) {
+                    } catch (UnknownHostException | HeadlessException e) {
                         JOptionPane.showMessageDialog(new JFrame(), "Error occurred while saving data!", "Error Message", JOptionPane.ERROR_MESSAGE);
                     }
                 }
@@ -258,7 +266,7 @@ public class JAVAMongoDBApplication {
             @Override
             public void run() {
                 try {
-                    UIManager.setLookAndFeel("com.jtattoo.plaf.noire.NoireLookAndFeel");
+                    UIManager.setLookAndFeel(LayoutUtils.JTATTOO_APPLICATION_THEME);
                 } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
                     Logger.getLogger(JAVAMongoDBApplication.class.getName()).log(Level.SEVERE, null, ex);
                 }

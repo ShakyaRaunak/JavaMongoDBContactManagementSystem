@@ -11,4 +11,7 @@ package com.javamongodb.utils;
  */
 public class LayoutUtils {
     
+    //JTattoo theme
+    public static final String JTATTOO_APPLICATION_THEME = "com.jtattoo.plaf.noire.NoireLookAndFeel";
+    
 }

@@ -5,6 +5,8 @@
  */
 package com.javamongodb.application;
 
+import com.javamongodb.utils.DatabaseUtils;
+import com.javamongodb.utils.LayoutUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -14,8 +16,10 @@ import com.mongodb.MongoClient;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BoxLayout;
@@ -101,13 +105,13 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
 
         try {
             // To connect to mongodb server
-            MongoClient mongoClient = new MongoClient("localhost", 27017);
+            MongoClient mongoClient = new MongoClient(DatabaseUtils.HOST_NAME, DatabaseUtils.PORT_NUMBER);
 
             // Now connect to your databases
-            DB db = mongoClient.getDB("ContactManagementSystemDB");
+            DB db = mongoClient.getDB(DatabaseUtils.DATABASE_NAME);
 
-            DBCollection coll = db.createCollection("memberInformationColl", null);
-            coll = db.getCollection("memberInformationColl");
+            DBCollection coll = db.createCollection(DatabaseUtils.COLLECTION_NAME, null);
+            coll = db.getCollection(DatabaseUtils.COLLECTION_NAME);
 
             DBCursor cursor = coll.find();
 
@@ -141,7 +145,7 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
 
     public static void main(String args[]) {
         try {
-            UIManager.setLookAndFeel("com.jtattoo.plaf.noire.NoireLookAndFeel");
+            UIManager.setLookAndFeel(LayoutUtils.JTATTOO_APPLICATION_THEME);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
             Logger.getLogger(JAVAMongoDBApplication.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -167,12 +171,12 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
                     int j[] = jtable.getSelectedRows();
                     try {
                         // To connect to mongodb server
-                        MongoClient mongoClient = new MongoClient("localhost", 27017);
+                        MongoClient mongoClient = new MongoClient(DatabaseUtils.HOST_NAME, DatabaseUtils.PORT_NUMBER);
 
                         // Now connect to your databases
-                        DB db = mongoClient.getDB("ContactManagementSystemDB");
+                        DB db = mongoClient.getDB(DatabaseUtils.DATABASE_NAME);
 
-                        DBCollection coll = db.getCollection("memberInformationColl");
+                        DBCollection coll = db.getCollection(DatabaseUtils.COLLECTION_NAME);
                         for (int count = 0; count < j.length; count++) {
                             String mobileno = (String) jtable.getValueAt(j[count], 9);
 
@@ -248,11 +252,11 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
 
         try {
             // To connect to mongodb server
-            MongoClient mongoClient = new MongoClient("localhost", 27017);
+            MongoClient mongoClient = new MongoClient(DatabaseUtils.HOST_NAME, DatabaseUtils.PORT_NUMBER);
 
             // Now connect to your databases
-            DB db = mongoClient.getDB("ContactManagementSystemDB");
-            DBCollection coll = db.getCollection("memberInformationColl");
+            DB db = mongoClient.getDB(DatabaseUtils.DATABASE_NAME);
+            DBCollection coll = db.getCollection(DatabaseUtils.COLLECTION_NAME);
 
             BasicDBObject query = new BasicDBObject("MobileNumber", new BasicDBObject("$regex", mobileno.toString()));
             DBCursor cursor = coll.find(query);
@@ -273,7 +277,7 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
                     JOptionPane.showMessageDialog(null, "Database has been modified... ", "Update Success", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
-        } catch (Exception e) {
+        } catch (UnknownHostException | HeadlessException e) {
 
         }
     }
