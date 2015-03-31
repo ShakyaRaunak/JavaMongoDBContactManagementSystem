@@ -9,19 +9,14 @@ import com.javamongodb.utils.DatabaseUtils;
 import com.javamongodb.utils.LayoutUtils;
 import com.javamongodb.utils.MessageUtils;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
-import com.sun.org.apache.xml.internal.serializer.utils.Utils;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.UnknownHostException;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,20 +37,20 @@ import javax.swing.table.DefaultTableModel;
  *
  * @author Raunak Shakya
  */
-public class ShowAllRecords extends JFrame implements ActionListener, TableModelListener {
+public class RecordsActivity extends JFrame implements ActionListener, TableModelListener {
 
     public final ResourceBundle messages = MessageUtils.MESSAGES;
 
     private JScrollPane jScrollPane;
     private Container container;
-    private MyTableModel myTableModel;
+    private TableModel tableModel;
     private final JTable jtable;
     private JButton editButton, deleteButton;
     private JPanel buttonsPanel, tablePanel;
     private static int editToggle = 0;
     private static boolean isEditable;
 
-    public ShowAllRecords() {
+    public RecordsActivity() {
         super("All the Contact Informations");
 
         container = getContentPane();
@@ -71,14 +66,14 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
 
         tablePanel = new JPanel();
         tablePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-        myTableModel = new MyTableModel() {
+        tableModel = new TableModel() {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return isEditable;
             }
         };
-        addColumnsToTable(myTableModel);
-        jtable = new JTable(myTableModel);
+        addColumnsToTable(tableModel);
+        jtable = new JTable(tableModel);
         setColumnWidths(jtable);
         jtable.setPreferredScrollableViewportSize(new Dimension(980, 500));
         jtable.setFillsViewportHeight(true);
@@ -104,32 +99,34 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
             DBCursor cursor = collection.find();
             while (cursor.hasNext()) {
                 DBObject doc = cursor.next();
-                Object[] data = new Object[]{doc.get("FirstName"), doc.get("MiddleName"), 
-                    doc.get("LastName"), doc.get("Gender"), doc.get("City"), doc.get("Street"), 
-                    doc.get("BlockNumber"), doc.get("Country"), doc.get("EmailAddress"), 
+                Object[] data = new Object[]{doc.get("FirstName"), doc.get("MiddleName"),
+                    doc.get("LastName"), doc.get("Gender"), doc.get("City"), doc.get("Street"),
+                    doc.get("BlockNumber"), doc.get("Country"), doc.get("EmailAddress"),
                     doc.get("MobileNumber"), doc.get("HomeContact")};
-                myTableModel.addRow(data);
+                tableModel.addRow(data);
             }
-            DatabaseUtils.closeDBConnection();
             jtable.getModel().addTableModelListener(this);
             jScrollPane = new JScrollPane(jtable);
-        } catch (Exception e) {
+        } catch (Exception exception) {
+            Logger.getLogger(exception.getMessage());
             JOptionPane.showMessageDialog(null, "Database Error!");
+        } finally {
+            DatabaseUtils.closeDBConnection();
         }
     }
 
-    private void addColumnsToTable(MyTableModel myTableModel) {
-        myTableModel.addColumn("First Name");
-        myTableModel.addColumn("Middle Name");
-        myTableModel.addColumn("Last Name");
-        myTableModel.addColumn("Gender");
-        myTableModel.addColumn("City");
-        myTableModel.addColumn("Street");
-        myTableModel.addColumn("BlockNo.");
-        myTableModel.addColumn("Country");
-        myTableModel.addColumn("Email");
-        myTableModel.addColumn("MobileNo.");
-        myTableModel.addColumn("TelNo.");
+    private void addColumnsToTable(TableModel tableModel) {
+        tableModel.addColumn("First Name");
+        tableModel.addColumn("Middle Name");
+        tableModel.addColumn("Last Name");
+        tableModel.addColumn("Gender");
+        tableModel.addColumn("City");
+        tableModel.addColumn("Street");
+        tableModel.addColumn("BlockNo.");
+        tableModel.addColumn("Country");
+        tableModel.addColumn("Email");
+        tableModel.addColumn("MobileNo.");
+        tableModel.addColumn("TelNo.");
     }
 
     private void setColumnWidths(JTable jtable) {
@@ -182,8 +179,10 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
                     );
                 }
             }
-            DatabaseUtils.closeDBConnection();
         } catch (Exception exception) {
+            Logger.getLogger(exception.getMessage());
+        } finally {
+            DatabaseUtils.closeDBConnection();
         }
     }
 
@@ -193,7 +192,7 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
             Logger.getLogger(JAVAMongoDBApplication.class.getName()).log(Level.SEVERE, null, ex);
         }
-        ShowAllRecords showAllRecords = new ShowAllRecords();
+        RecordsActivity recordsActivity = new RecordsActivity();
     }
 
     @Override
@@ -225,8 +224,10 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
                             collection.remove(new BasicDBObject().append("MobileNumber", mobileno)); //remove the document
                         }
                         removeSelectedRows(jtable);
-                    } catch (Exception e) {
-                        //System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                    } catch (Exception exception) {
+                        Logger.getLogger(exception.getMessage());
+                    } finally {
+                        DatabaseUtils.closeDBConnection();
                     }
                 }
             } else {
@@ -234,7 +235,7 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
             }
         }
     }
-    
+
     @Override
     public void tableChanged(TableModelEvent tme) {
         int row = tme.getFirstRow();
@@ -278,10 +279,10 @@ public class ShowAllRecords extends JFrame implements ActionListener, TableModel
                 throw new RuntimeException("Column could not be updated.");
         }
 
-        myTableModel = (MyTableModel) tme.getSource();
-        //String changedColName = myTableModel.getColumnName(col);
-        String newValue = myTableModel.getValueAt(row, column).toString();
-        String mobileNumber = myTableModel.getValueAt(row, 9).toString();
+        tableModel = (TableModel) tme.getSource();
+        //String changedColName = tableModel.getColumnName(col);
+        String newValue = tableModel.getValueAt(row, column).toString();
+        String mobileNumber = tableModel.getValueAt(row, 9).toString();
         update(changedColName, newValue, mobileNumber);
     }
 

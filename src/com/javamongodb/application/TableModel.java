@@ -11,9 +11,9 @@ import javax.swing.table.DefaultTableModel;
  *
  * @author Raunak Shakya
  */
-public class MyTableModel extends DefaultTableModel {
+public class TableModel extends DefaultTableModel {
 
-    public MyTableModel() {
+    public TableModel() {
     }
 
     @Override

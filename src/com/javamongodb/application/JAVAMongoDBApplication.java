@@ -80,8 +80,8 @@ public class JAVAMongoDBApplication {
     JTextField txtHomeContact = new JTextField(21);
 
     JButton showButton = new JButton("     " + messages.getString("common.show") + "     ");
-    JButton saveButton = new JButton("     " + messages.getString("common.save") + "     ");
-    JButton clearButton = new JButton("    " + messages.getString("common.clear") + "    ");
+    JButton saveButton = new JButton("      " + messages.getString("common.save") + "      ");
+    JButton clearButton = new JButton("     " + messages.getString("common.clear") + "     ");
 
     String valueFirstName, valueMiddleName, valueLastName, valueGender, valueCity,
             valueStreet, valueBlockNumber, valueCountry, valueEmailAddress, valueMobileNumber, valueHomeContact;
@@ -92,13 +92,13 @@ public class JAVAMongoDBApplication {
         panel.add(lblTitle, "gapleft 4, wrap 25");
 
         panel.add(lblFirstName, "gapleft 5, wrap");
-        panel.add(txtFirstName, "gapleft 15, wrap"); //, pushx, growx");
+        panel.add(txtFirstName, "gapleft 30, wrap"); //, pushx, growx");
 
         panel.add(lblMiddleName, "gapleft 5, wrap");
-        panel.add(txtMiddleName, "gapleft 15, wrap"); //, pushx, growx");
+        panel.add(txtMiddleName, "gapleft 30, wrap"); //, pushx, growx");
 
         panel.add(lblLastName, "gapleft 5, wrap");
-        panel.add(txtLastName, "gapleft 15, wrap");
+        panel.add(txtLastName, "gapleft 30, wrap");
 
         panel.add(lblGender, "gapleft 5, wrap");
         maleRadioButton.addActionListener(new ActionListener() {
@@ -115,29 +115,29 @@ public class JAVAMongoDBApplication {
         });
         bg.add(maleRadioButton);
         bg.add(femaleRadioButton);
-        panel.add(maleRadioButton, "gapleft 15, split2");
+        panel.add(maleRadioButton, "gapleft 30, split2");
         panel.add(femaleRadioButton, "wrap");
 
         panel.add(lblCity, "gapleft 5, wrap");
-        panel.add(txtCity, "gapleft 15, wrap");
+        panel.add(txtCity, "gapleft 30, wrap");
 
         panel.add(lblStreet, "gapleft 5, wrap");
-        panel.add(txtStreet, "gapleft 15, wrap");
+        panel.add(txtStreet, "gapleft 30, wrap");
 
         panel.add(lblBlockNumber, "gapleft 5, wrap");
-        panel.add(txtBlockNumber, "gapleft 15, wrap");
+        panel.add(txtBlockNumber, "gapleft 30, wrap");
 
         panel.add(lblCountry, "gapleft 5, wrap");
-        panel.add(txtCountry, "gapleft 15, wrap");
+        panel.add(txtCountry, "gapleft 30, wrap");
 
         panel.add(lblEmailAddress, "gapleft 5, wrap");
-        panel.add(txtEmailAddress, "gapleft 15, wrap");
+        panel.add(txtEmailAddress, "gapleft 30, wrap");
 
         panel.add(lblMobileNumber, "gapleft 5, wrap");
-        panel.add(txtMobileNumber, "gapleft 15, wrap");
+        panel.add(txtMobileNumber, "gapleft 30, wrap");
 
         panel.add(lblHomeContact, "gapleft 5, wrap");
-        panel.add(txtHomeContact, "gapleft 15, wrap 25");
+        panel.add(txtHomeContact, "gapleft 30, wrap 25");
 
         showButton.addActionListener(new ActionListener() {
             @Override
@@ -156,7 +156,7 @@ public class JAVAMongoDBApplication {
                         String password = new String(pf.getPassword());
                         if (password.equals("rs")) {
                             flag = 1;
-                            ShowAllRecords showAllRecords = new ShowAllRecords();
+                            RecordsActivity recordsActivity = new RecordsActivity();
                         } else {
                             JOptionPane.showMessageDialog(new JFrame(), "Incorrect password", "Conformation", JOptionPane.OK_OPTION);
                         }
@@ -184,20 +184,25 @@ public class JAVAMongoDBApplication {
                 if (valueFirstName.isEmpty() || valueMobileNumber.isEmpty()) {
                     JOptionPane.showMessageDialog(null, messages.getString("enter.minimum.field.values"), "Input Fields Empty", JOptionPane.WARNING_MESSAGE);
                 } else {
-                    DBCollection collection = DatabaseUtils.openDBConnection();
-                    BasicDBObject doc = new BasicDBObject("FirstName", valueFirstName).
-                            append("MiddleName", valueMiddleName).
-                            append("LastName", valueLastName).
-                            append("Gender", valueGender).
-                            append("City", valueCity).
-                            append("Street", valueStreet).
-                            append("BlockNumber", valueBlockNumber).
-                            append("Country", valueCountry).
-                            append("EmailAddress", valueEmailAddress).
-                            append("MobileNumber", valueMobileNumber).
-                            append("HomeContact", valueHomeContact);
-                    collection.insert(doc);
-                    DatabaseUtils.closeDBConnection();
+                    try {
+                        DBCollection collection = DatabaseUtils.openDBConnection();
+                        BasicDBObject doc = new BasicDBObject("FirstName", valueFirstName).
+                                append("MiddleName", valueMiddleName).
+                                append("LastName", valueLastName).
+                                append("Gender", valueGender).
+                                append("City", valueCity).
+                                append("Street", valueStreet).
+                                append("BlockNumber", valueBlockNumber).
+                                append("Country", valueCountry).
+                                append("EmailAddress", valueEmailAddress).
+                                append("MobileNumber", valueMobileNumber).
+                                append("HomeContact", valueHomeContact);
+                        collection.insert(doc);
+                    } catch (Exception exception) {
+                        Logger.getLogger(exception.getMessage());
+                    } finally {
+                        DatabaseUtils.closeDBConnection();
+                    }
                     JOptionPane.showMessageDialog(new JFrame(), "Data has been saved!", "Success Message", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
