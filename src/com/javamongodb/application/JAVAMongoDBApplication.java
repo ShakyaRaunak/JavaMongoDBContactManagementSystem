@@ -37,6 +37,9 @@ import net.miginfocom.swing.MigLayout;
 public class JAVAMongoDBApplication {
 
     public final ResourceBundle messages = MessageUtils.MESSAGES;
+    
+    String valueFirstName, valueMiddleName, valueLastName, valueGender, valueCity,
+            valueStreet, valueBlockNumber, valueCountry, valueEmailAddress, valueMobileNumber, valueHomeContact;
 
     JFrame frame = new JFrame("JAVA with MongoDB Project");
     JPanel panel = new JPanel();
@@ -82,9 +85,6 @@ public class JAVAMongoDBApplication {
     JButton showButton = new JButton("     " + messages.getString("common.show") + "     ");
     JButton saveButton = new JButton("      " + messages.getString("common.save") + "      ");
     JButton clearButton = new JButton("     " + messages.getString("common.clear") + "     ");
-
-    String valueFirstName, valueMiddleName, valueLastName, valueGender, valueCity,
-            valueStreet, valueBlockNumber, valueCountry, valueEmailAddress, valueMobileNumber, valueHomeContact;
 
     public JAVAMongoDBApplication() {
         panel.setLayout(new MigLayout());
@@ -149,19 +149,19 @@ public class JAVAMongoDBApplication {
                 pf.addAncestorListener(new RequestFocusListener());
                 pn.add(label, "wrap");
                 pn.add(pf);
-                int flag = 0;
-                while (flag != 1) {
+                boolean flag = false;
+                while (!flag) {
                     int okCxl = JOptionPane.showConfirmDialog(null, pn, "Password Required", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
                     if (okCxl == JOptionPane.OK_OPTION) {
                         String password = new String(pf.getPassword());
                         if (password.equals("rs")) {
-                            flag = 1;
+                            flag = true;
                             RecordsActivity recordsActivity = new RecordsActivity();
                         } else {
                             JOptionPane.showMessageDialog(new JFrame(), "Incorrect password", "Conformation", JOptionPane.OK_OPTION);
                         }
                     } else {
-                        flag = 1;
+                        flag = true;
                     }
                 }
             }
