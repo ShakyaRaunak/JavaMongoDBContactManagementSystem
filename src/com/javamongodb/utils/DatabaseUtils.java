@@ -5,6 +5,7 @@
  */
 package com.javamongodb.utils;
 
+import static com.javamongodb.application.JAVAMongoDBApplication.logger;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
@@ -27,15 +28,19 @@ public class DatabaseUtils {
     public static DBCollection openDBConnection() {
         try {
             MongoClient mongoClient = new MongoClient(HOST_NAME, PORT_NUMBER); //connect to the mongodb server
+            logger.debug("MongoClient object created");
             DB database = mongoClient.getDB(DATABASE_NAME); //connect to the database
+            logger.debug("Database achieved");
 
             //boolean auth = db.authenticate(myUserName, myPassword);
             DBCollection collection = database.getCollection(COLLECTION_NAME);
             if (collection == null) {
                 collection = database.createCollection(COLLECTION_NAME, null);
             }
+            logger.debug("Database collection achieved");
             return collection;
-        } catch (UnknownHostException | HeadlessException e) {
+        } catch (UnknownHostException | HeadlessException exception) {
+            logger.error("Error opening database connection:\n" + exception.getMessage());
             JOptionPane.showMessageDialog(
                     new JFrame(),
                     MessageUtils.MESSAGES.getString("error.while.saving.data"),
@@ -45,9 +50,9 @@ public class DatabaseUtils {
         }
         return null;
     }
-    
+
     public static void closeDBConnection() {
-        
+
     }
 
 }
