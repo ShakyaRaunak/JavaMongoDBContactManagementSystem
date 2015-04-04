@@ -14,8 +14,7 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.log4j.Logger;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -36,8 +35,10 @@ import net.miginfocom.swing.MigLayout;
  */
 public class JAVAMongoDBApplication {
 
+    public static Logger logger = Logger.getLogger(JAVAMongoDBApplication.class);
+
     public final ResourceBundle messages = MessageUtils.MESSAGES;
-    
+
     String valueFirstName, valueMiddleName, valueLastName, valueGender, valueCity,
             valueStreet, valueBlockNumber, valueCountry, valueEmailAddress, valueMobileNumber, valueHomeContact;
 
@@ -185,6 +186,7 @@ public class JAVAMongoDBApplication {
                     JOptionPane.showMessageDialog(null, messages.getString("enter.minimum.field.values"), "Input Fields Empty", JOptionPane.WARNING_MESSAGE);
                 } else {
                     try {
+                        logger.debug("Opening database connection");
                         DBCollection collection = DatabaseUtils.openDBConnection();
                         BasicDBObject doc = new BasicDBObject("FirstName", valueFirstName).
                                 append("MiddleName", valueMiddleName).
@@ -198,9 +200,11 @@ public class JAVAMongoDBApplication {
                                 append("MobileNumber", valueMobileNumber).
                                 append("HomeContact", valueHomeContact);
                         collection.insert(doc);
+                        logger.debug("Object insertion succeeded");
                     } catch (Exception exception) {
-                        Logger.getLogger(exception.getMessage());
+                        logger.error("Object insertion failed:\n" + exception.getMessage());
                     } finally {
+                        logger.debug("Closing database connection");
                         DatabaseUtils.closeDBConnection();
                     }
                     JOptionPane.showMessageDialog(new JFrame(), "Data has been saved!", "Success Message", JOptionPane.INFORMATION_MESSAGE);
@@ -239,13 +243,14 @@ public class JAVAMongoDBApplication {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        logger.info("JAVA MongoDB Application started");
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 try {
                     UIManager.setLookAndFeel(LayoutUtils.JTATTOO_APPLICATION_THEME);
-                } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
-                    Logger.getLogger(JAVAMongoDBApplication.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException exception) {
+                    logger.error("JTattoo theme could not be loaded:\n" + exception.getMessage());
                 }
                 JAVAMongoDBApplication javaMongoDBApplication = new JAVAMongoDBApplication();
             }

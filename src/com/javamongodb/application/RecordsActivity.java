@@ -5,6 +5,7 @@
  */
 package com.javamongodb.application;
 
+import static com.javamongodb.application.JAVAMongoDBApplication.logger;
 import com.javamongodb.utils.DatabaseUtils;
 import com.javamongodb.utils.LayoutUtils;
 import com.javamongodb.utils.MessageUtils;
@@ -18,8 +19,6 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -95,6 +94,7 @@ public class RecordsActivity extends JFrame implements ActionListener, TableMode
 
     private void getRecordsOnTable() {
         try {
+            logger.debug("Opening database connection");
             DBCollection collection = DatabaseUtils.openDBConnection();
             DBCursor cursor = collection.find();
             while (cursor.hasNext()) {
@@ -107,10 +107,12 @@ public class RecordsActivity extends JFrame implements ActionListener, TableMode
             }
             jtable.getModel().addTableModelListener(this);
             jScrollPane = new JScrollPane(jtable);
+            logger.debug("Displaying objects succeeded");
         } catch (Exception exception) {
-            Logger.getLogger(exception.getMessage());
+            logger.error("Displaying objects failed:\n" + exception.getMessage());
             JOptionPane.showMessageDialog(null, "Database Error!");
         } finally {
+            logger.debug("Closing database connection");
             DatabaseUtils.closeDBConnection();
         }
     }
@@ -179,9 +181,11 @@ public class RecordsActivity extends JFrame implements ActionListener, TableMode
                     );
                 }
             }
+            logger.debug("Updating object with id: " + id + " succeeded");
         } catch (Exception exception) {
-            Logger.getLogger(exception.getMessage());
+            logger.error("Updating object failed:\n" + exception.getMessage());
         } finally {
+            logger.debug("Closing database connection");
             DatabaseUtils.closeDBConnection();
         }
     }
@@ -189,8 +193,8 @@ public class RecordsActivity extends JFrame implements ActionListener, TableMode
     public static void main(String args[]) {
         try {
             UIManager.setLookAndFeel(LayoutUtils.JTATTOO_APPLICATION_THEME);
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
-            Logger.getLogger(JAVAMongoDBApplication.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException exception) {
+            logger.error("JTattoo theme could not be loaded:\n" + exception.getMessage());
         }
         RecordsActivity recordsActivity = new RecordsActivity();
     }
@@ -218,15 +222,18 @@ public class RecordsActivity extends JFrame implements ActionListener, TableMode
                 if (i == JOptionPane.YES_OPTION) {
                     int j[] = jtable.getSelectedRows();
                     try {
+                        logger.debug("Opening database connection");
                         DBCollection collection = DatabaseUtils.openDBConnection();
                         for (int count = 0; count < j.length; count++) {
                             String mobileno = (String) jtable.getValueAt(j[count], 9);
                             collection.remove(new BasicDBObject().append("MobileNumber", mobileno)); //remove the document
                         }
                         removeSelectedRows(jtable);
+                        logger.debug("Object deletion succeeded");
                     } catch (Exception exception) {
-                        Logger.getLogger(exception.getMessage());
+                        logger.error("Object deletion failed:\n" + exception.getMessage());
                     } finally {
+                        logger.debug("Closing database connection");
                         DatabaseUtils.closeDBConnection();
                     }
                 }
